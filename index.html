@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Giang & Trinh's Wedding</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <style>
+      /* Modify the background color */
+      .navbar-custom {
+        background-color: rgb(138, 154, 91);
+      }
+
+      /* Modify brand and text color */
+      .navbar-custom .navbar-brand {
+        color: white;
+      }
+      .navbar-custom .navbar-text {
+        color: white;
+      }
+    </style>
+  </head>
+
+  <body>
+    <nav class="navbar navbar-custom navbar-top">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <div class="navbar-brand">Giang & Trinh</div>
+          <p class="navbar-text" id="error"></p>
+        </div>
+        <form class="navbar-form navbar-right">
+          <div class="input-group">
+            <input
+              type="search"
+              id="search"
+              class="form-control"
+              placeholder="Guest Information..."
+            />
+          </div>
+        </form>
+      </div>
+    </nav>
+    <!--Main layout-->
+    <main>
+      <div class="table-responsive">
+        <!-- Table -->
+        <table id="myTable" class="table table-striped table-bordered">
+          <thead id="table-head">
+            <tr>
+              <th>Guest</th>
+              <th>Table</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+        <!-- Table -->
+      </div>
+    </main>
+    <!--Main layout-->
+  </body>
+
+  <!-- MDB ESSENTIAL -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.20.0/js/mdb.min.js"></script>
+  <!-- Google API -->
+  <script src="https://apis.google.com/js/api.js"></script>
+
+  <script>
+    // Google Sheets
+
+    const GS_SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly";
+    const GS_API_URL =
+      "https://sheets.googleapis.com/$discovery/rest?version=v4";
+
+    function initOAuthClient(credentials = null) {
+      if (
+        credentials &&
+        credentials.clientId !== null &&
+        typeof credentials.clientId === "string"
+      ) {
+        gapi.load("client:auth2", function () {
+          gapi.auth2
+            .init({ client_id: credentials.clientId })
+            .then(() => document.dispatchEvent(new Event("gapi-loaded")));
+        });
+      } else if (
+        credentials &&
+        credentials.apiKey !== null &&
+        typeof credentials.apiKey === "string"
+      ) {
+        gapi.load("client", () => {
+          gapi.client.setApiKey(credentials.apiKey);
+          document.dispatchEvent(new Event("gapi-loaded"));
+        });
+      } else console.error("clientId or apiKey not defined");
+    }
+
+    function signIn(scope = GS_SCOPE) {
+      return gapi.auth2
+        .getAuthInstance()
+        .signIn({ scope })
+        .then(
+          () => {
+            setCookie("guser-loggedin", "true", 1);
+            location.reload();
+          },
+          (e) => console.error(e)
+        );
+    }
+
+    function signOut() {
+      return gapi.auth2
+        .getAuthInstance()
+        .signOut()
+        .then(
+          () => {
+            setCookie("guser-loggedin", "true", -1);
+            location.reload();
+          },
+          (e) => console.error(e)
+        );
+    }
+
+    function loadClient(apiPath = GS_API_URL) {
+      return gapi.client.load(apiPath);
+    }
+
+    function getValues(
+      query,
+      cb = function (res) {
+        console.log(res);
+      },
+      err = function (err) {
+        console.error(err);
+      }
+    ) {
+      return loadClient().then(() =>
+        gapi.client.sheets.spreadsheets.values.get(query).then(cb, err)
+      );
+    }
+
+    function getPublicValues(
+      query,
+      cb = function (res) {
+        console.log(res);
+      },
+      err = function (err) {
+        console.error(err);
+      }
+    ) {
+      return loadClient().then(() =>
+        gapi.client.sheets.spreadsheets.values.get(query).then(cb, err)
+      );
+    }
+
+    function isSignedIn() {
+      if (getCookie("guser-loggedin") === "true") return true;
+      return false;
+    }
+
+    function setCookie(cname = "guser-loggedin", cvalue, exdays) {
+      const d = new Date();
+      d.setTime(d.getTime() + exdays * 24 * 60 * 60 * 1000);
+      let expires = "expires=" + d.toUTCString();
+      document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+    }
+
+    function getCookie(cname) {
+      let name = cname + "=";
+      let ca = document.cookie.split(";");
+      for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) == " ") {
+          c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+          return c.substring(name.length, c.length);
+        }
+      }
+      return "";
+    }
+
+    {
+      {
+        // Your API KEY
+        const API_KEY = "AIzaSyD2-iA8RHgDHKLzgrV1EHs1RbtLq-ncwBg";
+        var dataHeader = [];
+        var dataCollection = [];
+        var filteredCollection;
+
+        function displayResult(response) {
+          response.result.values.forEach((row, index) => {
+            if (index > 0) {
+              dataCollection.push({
+                Guest: row[0],
+                Table: row[1],
+                Description: row[2],
+              });
+            }
+          });
+          showtable(dataCollection);
+        }
+
+        function loadData() {
+          // Spreadsheet ID
+          const spreadsheetId = "1IAxY9boqdp4WSFogDYtOaJB8EvNPp3AqnATMGsanoF0";
+          const range = "Guest!A:Z";
+          getPublicValues({ spreadsheetId, range }, displayResult);
+        }
+
+        window.addEventListener("load", (e) => {
+          initOAuthClient({ apiKey: API_KEY });
+        });
+
+        document.addEventListener("gapi-loaded", (e) => {
+          loadData();
+        });
+
+        //show table data
+        function showtable(currentCollection) {
+          let tablebd = "";
+          for (var i = 0; i < currentCollection.length; i++) {
+            tablebd += `<tr>
+                    <td>${currentCollection[i].Guest}</td>
+                    <td>${currentCollection[i].Table}</td>
+                    <td>${currentCollection[i].Description}</td>
+                  </tr>`;
+          }
+          document.getElementById(
+            "error"
+          ).innerHTML = `${currentCollection.length} Guests`;
+
+          document.getElementById("table-body").innerHTML = tablebd;
+        }
+        document
+          .getElementById("search")
+          .addEventListener("keyup", function () {
+            var search = String(this.value);
+            filteredCollection = dataCollection.filter(function (val) {
+              if (val.Guest.includes(search) || val.Table.includes(search)) {
+                var newObject = {
+                  Guest: val.Guest,
+                  Description: val.Description,
+                  Table: val.Table,
+                };
+                return newObject;
+              }
+            });
+            showtable(filteredCollection);
+          });
+      }
+    }
+  </script>
+</html>
