@@ -10,6 +10,9 @@
     />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.20.0/js/mdb.min.js"></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+
     <style>
       /* Modify the background color */
       .navbar-custom {
@@ -65,14 +68,8 @@
     <!--Main layout-->
   </body>
 
-  <!-- MDB ESSENTIAL -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.20.0/js/mdb.min.js"></script>
-  <!-- Google API -->
-  <script src="https://apis.google.com/js/api.js"></script>
-
   <script>
     // Google Sheets
-
     const GS_SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly";
     const GS_API_URL =
       "https://sheets.googleapis.com/$discovery/rest?version=v4";
@@ -198,8 +195,11 @@
             if (index > 0) {
               dataCollection.push({
                 Guest: row[0],
+                guestLower: row[0].toLowerCase(),
                 Table: row[1],
+                tableLower: row[1].toLowerCase(),
                 Description: row[2],
+                Handle: row[3],
               });
             }
           });
@@ -240,13 +240,24 @@
         document
           .getElementById("search")
           .addEventListener("keyup", function () {
-            var search = String(this.value);
+            var search1 = String(this.value.toLowerCase());
+            var search2 = String(this.value);
             filteredCollection = dataCollection.filter(function (val) {
-              if (val.Guest.includes(search) || val.Table.includes(search)) {
+              if (
+                val.Handle.includes(search1) ||
+                val.Handle.includes(search2) ||
+                val.Table.includes(search1) ||
+                val.tableLower.includes(search1) ||
+                val.Table.includes(search2) ||
+                val.Guest.includes(search1) ||
+                val.guestLower.includes(search1) ||
+                val.Guest.includes(search2)
+              ) {
                 var newObject = {
                   Guest: val.Guest,
                   Description: val.Description,
                   Table: val.Table,
+                  Handle: val.Handle,
                 };
                 return newObject;
               }
