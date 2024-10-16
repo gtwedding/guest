@@ -237,6 +237,15 @@
 
           document.getElementById("table-body").innerHTML = tablebd;
         }
+
+        document
+          .getElementById("search")
+          .addEventListener("keypress", function (Event) {
+            if (event.key == "Enter") {
+              event.preventDefault();
+            }
+          });
+
         document
           .getElementById("search")
           .addEventListener("keyup", function () {
